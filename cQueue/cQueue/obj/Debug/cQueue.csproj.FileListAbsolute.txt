@@ -1,0 +1,8 @@
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\bin\Debug\cQueue.exe.config
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\obj\Debug\cQueue.csprojResolveAssemblyReference.cache
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\obj\Debug\cQueue.Properties.Resources.resources
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\obj\Debug\cQueue.csproj.GenerateResource.Cache
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\bin\Debug\cQueue.exe
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\bin\Debug\cQueue.pdb
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\obj\Debug\cQueue.exe
+C:\Users\Freshout\code\c-sharp-queue\cQueue\cQueue\obj\Debug\cQueue.pdb
