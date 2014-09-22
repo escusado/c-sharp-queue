@@ -15,7 +15,8 @@ namespace cQueue
         static void Main()
         {
 
-            Console.WriteLine("heerre");
+            var session = new Session();
+            session.Run();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
