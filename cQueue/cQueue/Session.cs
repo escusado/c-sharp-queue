@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace cQueue
 {
-    class Session
+    public class Session
     {
         /*private string appId = "dummy-app-id";
         private string callback = "dummy-callback";
@@ -18,29 +18,35 @@ namespace cQueue
         private string sessionId = "dummy-session-id";*/
 
         private Capturer dummyCapturer = new Capturer();
-        private Queue<Frame> queue = new Queue<Frame>();
-        private List<Worker> workers = new List<Worker>();
+        private Queue queue;
 
-        private int _numberOfWorkers = 10;
+        private int _numberOfWorkers = 42;
 
-        private List<int> _sentFrames = new List<int>();
+        private int framesSentCounter = 0;
+        private object successLock = new Object();
+
+        public Session()
+        {
+            Queue queue = new Queue();
+            this.queue = Queue.Synchronized(queue);
+        }
 
         public void Run()
         {
-            Worker tmpWorker;
 
-            for (var i = 0; i < this._numberOfWorkers; i+=1)
-            {
-                tmpWorker = new WorkerHttp(this.queue);
-                tmpWorker.WorkerSuccess += this.FrameSent;
-                tmpWorker.WorkerError += this.UploadFailed;
-                tmpWorker.Run();
-                workers.Add(tmpWorker);
-            }
-            
             //dummy capture sequence
             dummyCapturer.queue = this.queue;
             dummyCapturer.Run();
+
+            Worker tmpWorker;
+            for (var i = 0; i < this._numberOfWorkers; i+=1)
+            {
+                tmpWorker = new WorkerHttp(this);
+                tmpWorker.WorkerSuccess += this.FrameSent;
+                tmpWorker.WorkerError += this.UploadFailed;
+                tmpWorker.Run();
+            }
+           
         }
 
         public void FinalizeSession()
@@ -50,11 +56,13 @@ namespace cQueue
 
         public void FrameSent(int frameIndex)
         {
-            //save sent frame for testing
-            this._sentFrames.Add(frameIndex);
-
-            //notify UI eventually
-            Console.WriteLine("Frame Sent: {0}, Total: {1}", frameIndex, this._sentFrames.Count);
+            lock (successLock)
+            {
+                Console.WriteLine("Frame Sent: {0}, Total: {1}", frameIndex, this.framesSentCounter);
+                this.framesSentCounter++;
+                //notify progress to UI
+            }
+            
         }
 
         public void UploadFailed()
@@ -70,5 +78,27 @@ namespace cQueue
             //each Worker
         }
 
+        public Frame getNext()
+        {
+            lock (this.queue)
+            {
+                if (this.queue.Count > 0)
+                {
+                    return (Frame)this.queue.Dequeue();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public void Requeue(object frame)
+        {
+            lock (this.queue)
+            {
+                this.queue.Enqueue(frame);
+            }
+        }
     }
 }

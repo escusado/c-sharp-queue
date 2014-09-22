@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Timers;
-
-using System.ComponentModel;using System.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace cQueue
 {
     class Capturer
     {
 
-        public Queue<Frame> queue;
+        public Queue queue;
 
         private int capInterval = 10;
         private Timer capTimer = new Timer();
@@ -20,29 +19,32 @@ namespace cQueue
 
         public void Run()
         {
+            //for (var i = 0; i < 1001; i++)
+            //{
+            //    queue.Enqueue(new Frame(i));
+            //}
+
             this.capTimer.Interval = capInterval;
-            this.capTimer.Elapsed += this.RunCaptureWorker;
+            this.capTimer.Elapsed += this.Capture;
             this.capTimer.Start();
         }
 
-        public void RunCaptureWorker(Object source, ElapsedEventArgs e)
+        public void Capture(Object source, ElapsedEventArgs e)
         {
-            BackgroundWorker _bw = new BackgroundWorker();
-            _bw.DoWork += this.Capture;
-            _bw.RunWorkerAsync();
-        }
-
-        public void Capture(object sender, DoWorkEventArgs e)
-        {
-            if (currentFrame == 101)
+            lock (this.queue)
             {
-                this.capTimer.Stop();
-                Console.WriteLine("\n FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
-                return;
+                if (currentFrame == 10001)
+                {
+                    this.capTimer.Stop();
+                    Console.WriteLine("\n FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
+                    return;
+                }
+
+                Console.WriteLine("Captured frame: {0}", this.currentFrame);
+                this.queue.Enqueue(new Frame(currentFrame));
+                currentFrame++;
             }
-            Console.WriteLine("Captured frame: {0} at: {1}", this.currentFrame, DateTime.Now.Ticks);
-            queue.Enqueue(new Frame(currentFrame));
-            currentFrame++;
+            
         }
     }
 }

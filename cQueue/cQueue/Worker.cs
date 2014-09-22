@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -21,18 +20,18 @@ namespace cQueue
         private int currentRetries = 0;
 
         protected Frame frame = null;
-        protected Queue<Frame> queue;
+        public Session session;
 
         abstract public void _Send();
 
-        private int checkInterval = new Random().Next(100,200);
+        private int checkInterval = 100;
         private Timer monitorTimer = new Timer();
 
-        public Worker(Queue<Frame> queue)
+        public Worker(Session session)
         {
-            this.queue = queue;
+            this.session = session;
             this.monitorTimer.Interval = this.checkInterval;
-            this.monitorTimer.Elapsed += this._RunWorker;
+            this.monitorTimer.Elapsed += this._Run;
         }
 
         public void Run()
@@ -40,53 +39,36 @@ namespace cQueue
             this.monitorTimer.Start();
         }
 
-        public void _RunWorker(Object source, ElapsedEventArgs e)
+        public void _Run(Object source, ElapsedEventArgs e)
         {
-            BackgroundWorker _bw = new BackgroundWorker();
-            _bw.DoWork += this._Run;
-            _bw.RunWorkerAsync();
-        }
-
-        public void _Run(object sender, DoWorkEventArgs e)
-        {
+            
+            if (this.frame == null)
+            {
+                this.frame = this.session.getNext();
+            }
 
             if (this.frame == null)
             {
-                if (this.queue.Count > 0)
-                {
-                    this.frame = queue.Dequeue();
-                }
-                else
-                {
-                    Console.WriteLine("No Frames in queue");
-                    return;
-                }
+                return;
             }
 
             this.monitorTimer.Stop();
 
             if (this.currentRetries > this.maxRetries)
             {
-                this.queue.Enqueue(this.frame); //return frame to queue at the beginning
-                this.WorkerError();
-            }
-
-            try
-            {
-                this._Send();
+                this.session.Requeue(this.frame);
                 this.frame = null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: {0}", ex.ToString());
-                this.currentRetries++;
+                this.WorkerError();
+                return;
             }
 
-            this.monitorTimer.Start();
+            this._Send();
         }
 
-        protected void _OnWorkerSuccess(int frameIndex){
-            this.WorkerSuccess(frameIndex);
+        protected void _OnWorkerSuccess(){
+            this.WorkerSuccess(this.frame.index);
+            this.frame = null;
+            this.monitorTimer.Start();
         }
     }
 }
