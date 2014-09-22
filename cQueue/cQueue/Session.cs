@@ -19,8 +19,9 @@ namespace cQueue
 
         private Capturer dummyCapturer = new Capturer();
         private Queue queue;
+        private System.Collections.Generic.List<Worker> workers = new System.Collections.Generic.List<Worker>();
 
-        private int _numberOfWorkers = 42;
+        private int _numberOfWorkers = 10;
 
         private int framesSentCounter = 0;
         private object successLock = new Object();
@@ -42,6 +43,7 @@ namespace cQueue
             for (var i = 0; i < this._numberOfWorkers; i+=1)
             {
                 tmpWorker = new WorkerHttp(this);
+                workers.Add(tmpWorker);
                 tmpWorker.WorkerSuccess += this.FrameSent;
                 tmpWorker.WorkerError += this.UploadFailed;
                 tmpWorker.Run();
@@ -59,6 +61,12 @@ namespace cQueue
             lock (successLock)
             {
                 Console.WriteLine("Frame Sent: {0}, Total: {1}", frameIndex, this.framesSentCounter);
+
+                if (this.dummyCapturer.currentFrame == (this.framesSentCounter+1))
+                {
+                    this.Dispose();
+                }
+
                 this.framesSentCounter++;
                 //notify progress to UI
             }
@@ -67,15 +75,16 @@ namespace cQueue
 
         public void UploadFailed()
         {
-            //notify error
+            Console.WriteLine("Recording failed to upload");
+            this.Dispose();
         }
 
         public void Dispose()
         {
-            //cleanly dispose
-            //queue
-            //workers
-            //each Worker
+            workers.ForEach(delegate(Worker worker)
+            {
+                worker.Dispose();
+            });
         }
 
         public Frame getNext()

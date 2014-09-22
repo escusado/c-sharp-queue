@@ -16,7 +16,7 @@ namespace cQueue
         public event SuccessHandler WorkerSuccess;
         public event ErrorHandler WorkerError;
 
-        private int maxRetries = 15;
+        private int maxRetries = 3;
         private int currentRetries = 0;
 
         protected Frame frame = null;
@@ -62,13 +62,36 @@ namespace cQueue
                 return;
             }
 
-            this._Send();
+            try
+            {
+                this._Send();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Send failed retry {0}...", this.currentRetries);
+                this.currentRetries++;
+                if (this.monitorTimer != null)
+                {
+                    this.monitorTimer.Start();
+                }
+            }
         }
 
         protected void _OnWorkerSuccess(){
+            this.currentRetries = 0;
             this.WorkerSuccess(this.frame.index);
             this.frame = null;
-            this.monitorTimer.Start();
+            if (this.monitorTimer != null)
+            {
+                this.monitorTimer.Start();
+            }
+        }
+
+        public void Dispose(){
+            Console.WriteLine("DISPOSEEEEEEEEEE!!!!!!!!!!");
+            this.monitorTimer.Stop();
+            this.monitorTimer.Dispose();
+            this.monitorTimer = null;
         }
     }
 }

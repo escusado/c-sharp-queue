@@ -15,15 +15,10 @@ namespace cQueue
         private int capInterval = 10;
         private Timer capTimer = new Timer();
 
-        private int currentFrame = 0;
+        public int currentFrame = 0;
 
         public void Run()
         {
-            //for (var i = 0; i < 1001; i++)
-            //{
-            //    queue.Enqueue(new Frame(i));
-            //}
-
             this.capTimer.Interval = capInterval;
             this.capTimer.Elapsed += this.Capture;
             this.capTimer.Start();
@@ -33,9 +28,10 @@ namespace cQueue
         {
             lock (this.queue)
             {
-                if (currentFrame == 10001)
+                if (currentFrame == 1001)
                 {
                     this.capTimer.Stop();
+                    this.capTimer.Dispose();
                     Console.WriteLine("\n FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
                     return;
                 }
